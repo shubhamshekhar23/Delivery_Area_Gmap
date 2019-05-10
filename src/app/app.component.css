@@ -1,0 +1,11 @@
+agm-map {
+  height: 300px;
+}
+button{
+  display:block;
+  padding:1em;
+  margin:2em;
+  background: red;
+  color:#fff;
+  font-weight:600;
+}

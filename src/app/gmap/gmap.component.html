@@ -1,0 +1,89 @@
+<div id="panel">
+  <div id="color-palette"></div>
+  <div>
+    <button id="delete-button">Delete Selected Shape</button>
+  </div>
+  <div>
+    <button (click)="showAllShapes()">Show All Shapes</button>
+  </div>
+  <div>
+    <button (click)="hideAllShapes()">Hide All Shapes</button>
+  </div>
+  <hr />
+  <div>
+    <!-- <h5>Add Delvery Zones</h5> -->
+  </div>
+  <!-- add zone -->
+  <div>
+    <p>Zone Name :</p>
+    <input [(ngModel)]="name" />
+    <p>Zone Delivery Charge :</p>
+    <input type="number" [(ngModel)]="delCharge" />
+    <br />
+    <div>
+      <button
+        type="button"
+        style="margin-top: 10px"
+        (click)="addZone(); $event.stopPropagation()"
+      >
+        Add Zone
+      </button>
+    </div>
+    <!-- <p>Value: {{ name }}</p>
+      <button (click)="setValue()">Set value</button> -->
+  </div>
+  <hr />
+  <!-- zonde details -->
+  <div>
+    <h4>Zone Details ::</h4>
+    <span *ngFor="let item of zoneObjectArray"
+      ><p>{{ item.name }}:</p>
+      <li *ngIf="item.shape.polygon">
+        type - polygon
+      </li>
+      <li *ngIf="item.shape.circle">
+        type - circle
+      </li>
+      <li>DeliveryCharge - {{ item.deliveryCharge }}</li>
+      <button (click)="editEnable(item.name)">Edit</button>
+      <button (click)="saveShape(item.name)">Save</button>
+    </span>
+  </div>
+  <hr />
+  <!-- enter address check -->
+  <div>
+    <p>Check Delivery Charge of Address</p>
+    <p>Address :</p>
+    <textarea
+      name="text"
+      rows="14"
+      cols="10"
+      wrap="soft"
+      style="height: 65px; width: 210px"
+      [(ngModel)]="address"
+    >
+    </textarea>
+    <button (click)="checkDelivery(true)">Check</button>
+    <p>Your Delivery Charge is : {{ checkDeliveryCharge }}</p>
+  </div>
+  <hr />
+  <!-- check delivery charg -->
+  <div>
+    <p>Check Delivery Charge of Location</p>
+    <p>Zone latitude :</p>
+    <input type="number" [(ngModel)]="clickLat" />
+    <p>Zone longitude :</p>
+    <input type="number" [(ngModel)]="clickLng" />
+    <button (click)="checkDelivery(false); $event.stopPropagation()">
+      Check
+    </button>
+    <p>Your Delivery Charge is : {{ checkDeliveryCharge }}</p>
+  </div>
+  <!-- <hr />
+  <div>
+    display - <br />
+    clicked lat : {{ clickLat }}<br />
+    clicked lng : {{ clickLng }}
+  </div> -->
+</div>
+<div id="map"></div>
