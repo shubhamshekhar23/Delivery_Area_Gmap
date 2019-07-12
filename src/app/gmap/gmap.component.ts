@@ -1,17 +1,21 @@
-import { Component, OnInit } from "@angular/core";
+import { Component, OnInit, AfterViewChecked } from "@angular/core";
 import { Inject } from "@angular/core";
 import { DOCUMENT } from "@angular/common";
 import * as geolib from "geolib";
 import { HttpClient } from "@angular/common/http";
 
 declare const google: any;
+// declare const geolib: any;
 
 @Component({
   selector: "app-gmap",
   templateUrl: "./gmap.component.html",
-  styleUrls: ["./gmap.component.css"]
+  styleUrls: ["./gmap.component.scss"]
 })
-export class GmapComponent implements OnInit {
+export class GmapComponent implements OnInit, AfterViewChecked {
+  ngAfterViewChecked(): void {
+    this.allowOnlyCircleAndPolygon();
+  }
   geocodeURL = "https://maps.googleapis.com/maps/api/geocode/json";
   drawingManager: any;
   selectedShape: any;
@@ -62,6 +66,35 @@ export class GmapComponent implements OnInit {
     this.document = document;
   }
 
+  allowOnlyCircleAndPolygon() {
+    let drawingNode = null;
+    let mapArr = document.getElementsByClassName("gmnoprint");
+    for (let i = 0; i < mapArr.length; i++) {
+      if(mapArr[i].childElementCount == 6){
+        drawingNode = mapArr[i].children;
+      }
+    }
+    if(drawingNode){
+      [1, 2, 3].forEach(index => {
+        if (drawingNode[index]) {
+          drawingNode[index].style.display = "none";
+        }
+      });
+    }
+    // if (document.getElementsByClassName("gmnoprint")[2]) {
+    //   console.log("inside allowonly2");
+    //   let map1 = this.document.getElementById("map");
+    //   let AlldrawToolsNode: any = document.getElementsByClassName(
+    //     "gmnoprint"
+    //   )[2].children;
+    //   [1, 2, 3].forEach(index => {
+    //     if (AlldrawToolsNode[index]) {
+    //       AlldrawToolsNode[index].style.display = "none";
+    //     }
+    //   });
+    // }
+  }
+
   updateShapesCoords(newShape) {
     let newpath = this.getPaths(newShape);
     if (newShape.type == "polygon") {
@@ -107,6 +140,7 @@ export class GmapComponent implements OnInit {
     // console.log("deleting the element");
     // console.log(this.selectedShape);
     // done
+    console.log(this.currentShape);
     this.currentShapes.polygon.forEach((element, i) => {
       if (
         JSON.stringify(this.getPaths(this.selectedShape)) ===
@@ -128,12 +162,12 @@ export class GmapComponent implements OnInit {
     }
     // Retrieves the current options from the drawing manager and replaces the
     // stroke or fill color as appropriate.
-    var polylineOptions = this.drawingManager.get("polylineOptions");
-    polylineOptions.strokeColor = color;
-    this.drawingManager.set("polylineOptions", polylineOptions);
-    var rectangleOptions = this.drawingManager.get("rectangleOptions");
-    rectangleOptions.fillColor = color;
-    this.drawingManager.set("rectangleOptions", rectangleOptions);
+    // var polylineOptions = this.drawingManager.get("polylineOptions");
+    // polylineOptions.strokeColor = color;
+    // this.drawingManager.set("polylineOptions", polylineOptions);
+    // var rectangleOptions = this.drawingManager.get("rectangleOptions");
+    // rectangleOptions.fillColor = color;
+    // this.drawingManager.set("rectangleOptions", rectangleOptions);
     var circleOptions = this.drawingManager.get("circleOptions");
     circleOptions.fillColor = color;
     this.drawingManager.set("circleOptions", circleOptions);
@@ -221,7 +255,6 @@ export class GmapComponent implements OnInit {
 
   findCurrentLocation() {
     var infoWindow = new google.maps.InfoWindow({ map: this.map });
-
     // Try HTML5 geolocation.
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -294,11 +327,11 @@ export class GmapComponent implements OnInit {
       markerOptions: {
         draggable: true
       },
-      polylineOptions: {
-        editable: true,
-        draggable: true
-      },
-      rectangleOptions: polyOptions,
+      // polylineOptions: {
+      //   editable: true,
+      //   draggable: true
+      // },
+      // rectangleOptions: polyOptions,
       circleOptions: polyOptions,
       polygonOptions: polyOptions,
       map: map
@@ -316,7 +349,7 @@ export class GmapComponent implements OnInit {
       }
     );
     google.maps.event.addListener(this.drawingManager, "overlaycomplete", e => {
-      this.drawingManager.setMap(null);
+      this.hideDrawingTools();
       this.currentShapeLatLng = {};
       // console.log("overlay complete :", e.type);
       var newShape = e.overlay;
@@ -437,6 +470,10 @@ export class GmapComponent implements OnInit {
   }
 
   addZone() {
+    if(!this.selectedShape){
+      alert('Please draw the shape');
+      return;
+    }
     let obj = {};
     obj["name"] = this.name;
     obj["shape"] = this.currentShapeLatLng;
@@ -454,13 +491,15 @@ export class GmapComponent implements OnInit {
     this.showDrawingTools();
     this.name = "";
     this.delCharge = 0;
-    console.log(this.zoneObjectArray);
-    console.log(this.listOfZoneShapes);
+    console.log('zoneObjectARR', this.zoneObjectArray);
+    console.log('listofZoneShapes',this.listOfZoneShapes);
   }
 
   editEnable(name) {
     this.hideAllShapes();
     this.showShape(name);
+    console.log('name of zone', name);
+    console.log('listofZoneShapes',this.listOfZoneShapes);
     this.listOfZoneShapes.forEach(element => {
       if (element.name == name) {
         element.shape.setEditable(true);
@@ -484,25 +523,44 @@ export class GmapComponent implements OnInit {
     return flag;
   }
 
+  deleteZone(name){
+    let delIndex1 = 0;
+    let delIndex2 = 0;
+    this.listOfZoneShapes.forEach((element, i) => {
+      if (element.name == name) {
+        delIndex1 = i;
+      }
+    });
+    this.zoneObjectArray.forEach((element, i) => {
+      if (element.name == name) {
+        delIndex2 = i;
+      }
+    });
+    this.listOfZoneShapes.splice(delIndex1,1);
+    this.zoneObjectArray.splice(delIndex2,1);
+  }
+
   saveShape(name) {
     this.listOfZoneShapes.forEach((element, i) => {
       if (element.name == name) {
         this.listOfZoneShapes[i] = {
-          name: this.name,
+          name: name,
           shape: this.currentShape
         };
         element.shape.setEditable(false);
         element.shape.draggable = false;
+        this.hideAllShapes();
+        console.log(this.getPaths(this.currentShape));
         // element.shape.clickable = false;
       }
     });
     // this.currentShape = null;
-    console.log(this.getPaths(this.currentShape));
   }
 
   showShape(name) {
     this.listOfZoneShapes.forEach((element, i) => {
       if (element.name == name) {
+        this.currentShape = element.shape;
         element.shape.setMap(this.map);
       }
     });
@@ -530,7 +588,7 @@ export class GmapComponent implements OnInit {
 
   getDilveryCharge(coordObj) {
     let delCharge = 0;
-    console.log(this.zoneObjectArray);
+    console.log('zoneobjectarr', this.zoneObjectArray);
     this.zoneObjectArray.forEach(item => {
       if (item.shape.polygon) {
         if (geolib.isPointInside(coordObj, item.shape.polygon)) {
@@ -600,5 +658,6 @@ export class GmapComponent implements OnInit {
 
   ngOnInit() {
     this.initialize();
+    
   }
 }
